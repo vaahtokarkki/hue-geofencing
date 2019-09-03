@@ -35,7 +35,6 @@ class Sun(object):
         self.sunset = data[0]
         self.sunrise = data[1]
         self.timestamp = datetime.utcnow()
-        print(self.sunset, self.sunrise)
         return True
 
     def is_past_sunset(self):
@@ -47,6 +46,10 @@ class Sun(object):
         return self.sunset < datetime.utcnow() < self.sunrise
 
     def _run_schedule(self):
+        """
+        Start loop for scheduler. This should be run at own thread to prevent blocking
+        """
+
         while True:
             schedule.run_pending()
             time.sleep(60)

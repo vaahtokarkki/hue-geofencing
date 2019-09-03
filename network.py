@@ -5,15 +5,21 @@ from scapy.all import *
 import settings
 
 
+SCAN_INTERVAL = settings.SCAN_INTERVAL
+REFRESH_INTERVAL = 900
+MAX_ARP_TRIES = 5  # How many times ARP ping is sent to one device
+
+
 class Network(object):
     """
     Class to detect changes in network and trigger functions when device joins or leaves
-    form network
+    form network. Provides also interval functionality to scan devices in network
+    periodically.
     """
 
     def __init__(self, callback_leave, callback_join, track=True):
         """
-        Set up network class.
+        Set up network class and create intervals.
 
         Keyword arguments:
         callback_join -- Function to trigger when new tracked device joins to network
@@ -24,24 +30,24 @@ class Network(object):
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
-        for _ in range(5):
-            self.scan_devices()
+        self.refresh_devices_online()
         if track:
             self._ping_interval = self._set_interval(self.ping_devices_online,
-                                                     settings.SCAN_INTERVAL)
+                                                     SCAN_INTERVAL)
+            self._refresh_interval = self._set_interval(self.refresh_devices_online,
+                                                        REFRESH_INTERVAL)
             self._sniff = threading.Thread(target=self._start_sniff)
             self._sniff.start()
             if settings.DEBUG:
-                print(f"Scanning interval set up with{settings.SCAN_INTERVAL}s")
+                print(f"Scanning interval set up with{SCAN_INTERVAL}s")
+                print(f"Refresh interval set up with{REFRESH_INTERVAL}s")
                 print("ARP listening active")
 
     def scan_devices(self, ip=settings.NETWORK_MASK):
         """
-        Scan all devices in network. If initial_scan is True, disable ARP packet handling.
-        By default network mask from settings is used, but can be overriden from
-        arguments.
-        This updates devices_online class variable. If no tracked devices found after
-        scan, trigger given leave callback function.
+        Scan all devices in network. By default network mask from settings is used, but
+        can be overriden from arguments. Found devices are added to devices_online class
+        variable.
         """
 
         arp_request = ARP(pdst=ip)
@@ -52,24 +58,31 @@ class Network(object):
         for client in answered_list:
             client_mac = str(client[1].hwsrc)
             client_ip = str(client[1].psrc)
-            if settings.DEBUG:
-                print("found device", client_ip, client_mac)
             if client_mac in settings.DEVICES:
+                if settings.DEBUG:
+                    print("found device", client_ip, client_mac)
                 self._devices_online.add((client_ip, client_mac))
 
         if settings.DEBUG:
             print("tracked devcices online", self._devices_online)
 
+    def refresh_devices_online(self):
+        """ Run scan_devices() for given times """
+        for _ in range(MAX_ARP_TRIES):
+            self.scan_devices()
+
     def ping_devices_online(self):
+        """
+        Ping all devices in devices_online. Return True if device is responding, otherwise
+        False and remove device from devices_online set. If all devices are removed from
+        set, trigger handle_leave callback function
+        """
         if len(self._devices_online) == 0:
-            return
+            return False
 
         for device in self._devices_online.copy():
-            for _ in range(5):
-                ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff") /
-                                 ARP(pdst=device[0]), timeout=2, verbose=False)
-                if len(ans) > 0:
-                    return
+            if self._ping_device(device[0]):
+                continue
 
             if settings.DEBUG:
                 print("lost", device)
@@ -81,7 +94,26 @@ class Network(object):
             self.handle_leave()
 
     def _start_sniff(self):
+        """ Run scapy network sniff with ARP filter """
         sniff(filter="arp", prn=self.handle_arp_packet)
+
+    def _ping_device(self, device):
+        """ Ping given device with ARP packets. If device is respondin return True,
+        otherwise Flase.
+
+        Core arguments:
+        device -- Device ip address as string, for example '192.168.1.101'
+        """
+
+        if not device:
+            return False
+
+        for _ in range(MAX_ARP_TRIES):
+            ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff") /
+                             ARP(pdst=device), timeout=2, verbose=False)
+            if len(ans) > 0:
+                return True
+        return False
 
     def handle_arp_packet(self, packet):
         """
