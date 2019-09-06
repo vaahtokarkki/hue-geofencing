@@ -123,6 +123,9 @@ class Network(object):
         Note: packets must be filtered with _get_BPF_filter() before handling
         """
 
+        if not all(attribute in packet for attribute in [Ether, IP]):
+            return False
+
         client_mac = str(packet[Ether].src)
         client_ip = str(packet[IP].src)
         device = (client_ip, client_mac)
