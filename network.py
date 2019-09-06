@@ -95,7 +95,7 @@ class Network(object):
 
     def _start_sniff(self):
         """ Run scapy network sniff with ARP filter """
-        sniff(filter="arp", prn=self.handle_arp_packet)
+        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
 
     def _ping_device(self, device):
         """ Ping given device with ARP packets. If device is respondin return True,
@@ -115,16 +115,18 @@ class Network(object):
                 return True
         return False
 
-    def handle_arp_packet(self, packet):
+    def handle_packet(self, packet):
         """
-        Handle detected ARP packet. If packet is from some of tracked devices specified in
-        settings and it is not present in devices online, trigger join callback function
+        Handle detected packet. If source of packet is not present in devices online,
+        trigger join callback function.
+
+        Note: packets must be filtered with _get_BPF_filter() before handling
         """
 
-        client_mac = str(packet[1].hwsrc)
-        client_ip = str(packet[1].psrc)
+        client_mac = str(packet[Ether].src)
+        client_ip = str(packet[IP].src)
         device = (client_ip, client_mac)
-        if client_mac in settings.DEVICES and device not in self._devices_online:
+        if device not in self._devices_online:
             if settings.DEBUG:
                 print("new tracked device joined", device)
             self._devices_online.add(device)
@@ -141,3 +143,12 @@ class Network(object):
         t = threading.Timer(sec, func_wrapper)
         t.start()
         return t
+
+    def _get_BPF_filter(self):
+        output = ""
+        for i in range(len(settings.DEVICES)):
+            mac_address = settings.DEVICES[i]
+            output += f"ether src host {mac_address}"
+            if i < len(settings.DEVICES) - 1:
+                output += " or "
+        return output
