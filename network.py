@@ -123,7 +123,7 @@ class Network(object):
         Note: packets must be filtered with _get_BPF_filter() before handling
         """
 
-        if not all(attribute in packet for attribute in [Ether, IP]):
+        if IP not in packet or Ether not in packet:
             return False
 
         client_mac = str(packet[Ether].src)
