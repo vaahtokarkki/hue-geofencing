@@ -6,3 +6,4 @@ env/
 .pytest*
 **/.pytest*
 htmlcov
+.coverage
