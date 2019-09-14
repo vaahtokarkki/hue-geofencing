@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
+import logging
+
+import settings
 from hue import Hue
 from network import Network
-import logging
 
 
 if __name__ == "__main__":
     logger = logging.getLogger("main")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(settings.LOG_LEVEL)
     logger.addHandler(logging.StreamHandler())
     logger.info('creating an instance of auxiliary_module.Auxiliary')
     hue = Hue()

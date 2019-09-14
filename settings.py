@@ -30,7 +30,7 @@ def _get_location():
     return location
 
 
-DEBUG = os.getenv("DEBUG", False)
+LOG_LEVEL = os.getenv("LOG_LEVEL", 20)
 SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 300)
 NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.1.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
