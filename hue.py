@@ -1,9 +1,12 @@
+import logging
 import warnings
 
 from phue import Bridge
 
 import settings
 from sun import Sun
+
+log = logging.getLogger("main")
 
 
 class Hue(object):
@@ -15,7 +18,7 @@ class Hue(object):
         self.bridge = Bridge(settings.BRIDGE_IP)
         self.bridge.connect()
         self.sunset = Sun()
-        print("Connected to Hue bridge!")
+        log.info("Connected to Hue bridge!")
 
     def set_arrive(self):
         """

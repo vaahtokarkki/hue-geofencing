@@ -1,9 +1,9 @@
+import logging
 import threading
 
 from scapy.all import *
 
 import settings
-
 
 SCAN_INTERVAL = settings.SCAN_INTERVAL
 REFRESH_INTERVAL = 900
@@ -27,6 +27,7 @@ class Network(object):
         track -- Start ARP packet sniffing and interval to scan network, default True
         """
 
+        self.log = logging.getLogger("main")
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
@@ -36,12 +37,13 @@ class Network(object):
                                                      SCAN_INTERVAL)
             self._refresh_interval = self._set_interval(self.refresh_devices_online,
                                                         REFRESH_INTERVAL)
-            self._sniff = threading.Thread(target=self._start_sniff)
+            self._stop_sniff = threading.Event()
+            self._sniff = threading.Thread(target=self._start_sniff,
+                                           args=[self._stop_sniff])
             self._sniff.start()
-            if settings.DEBUG:
-                print(f"Scanning interval set up with{SCAN_INTERVAL}s")
-                print(f"Refresh interval set up with{REFRESH_INTERVAL}s")
-                print("ARP listening active")
+            self.log.info(f"Scanning interval set up with{SCAN_INTERVAL}s")
+            self.log.info(f"Refresh interval set up with{REFRESH_INTERVAL}s")
+            self.log.info("ARP listening active")
 
     def scan_devices(self, ip=settings.NETWORK_MASK):
         """
@@ -54,17 +56,14 @@ class Network(object):
         broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
         arp_request_broadcast = broadcast/arp_request
         answered_list = srp(arp_request_broadcast, timeout=2, verbose=False)[0]
-
         for client in answered_list:
             client_mac = str(client[1].hwsrc)
             client_ip = str(client[1].psrc)
             if client_mac in settings.DEVICES:
-                if settings.DEBUG:
-                    print("found device", client_ip, client_mac)
+                self.log.debug(f"found device {client_ip} {client_mac}")
                 self._devices_online.add((client_ip, client_mac))
 
-        if settings.DEBUG:
-            print("tracked devcices online", self._devices_online)
+        self.log.debug(f"tracked devcices online {self._devices_online}")
 
     def refresh_devices_online(self):
         """ Run scan_devices() for given times """
@@ -84,18 +83,17 @@ class Network(object):
             if self._ping_device(device[0]):
                 continue
 
-            if settings.DEBUG:
-                print("lost", device)
+            self.log.warning("Lost device", device)
             self._devices_online.remove(device)
 
         if len(self._devices_online) == 0:
-            if settings.DEBUG:
-                print("All devices offline")
+            self.log.warning("All devices offline")
             self.handle_leave()
 
-    def _start_sniff(self):
+    def _start_sniff(self, stop_event):
         """ Run scapy network sniff with ARP filter """
-        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
+        while not stop_event.is_set():
+            sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
 
     def _ping_device(self, device):
         """ Ping given device with ARP packets. If device is respondin return True,
@@ -129,11 +127,13 @@ class Network(object):
         client_mac = str(packet[Ether].src)
         client_ip = str(packet[IP].src)
         device = (client_ip, client_mac)
-        if device not in self._devices_online:
-            if settings.DEBUG:
-                print("new tracked device joined", device)
+        if device not in self._devices_online and client_ip != "0.0.0.0":
+            self.log.warning(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
+            if len(self._devices_online) == len(settings.DEVICES):
+                # All devices online, no need to sniff new devices
+                self._stop_sniff.set()
 
     def _set_interval(self, func, sec):
         """
@@ -148,6 +148,11 @@ class Network(object):
         return t
 
     def _get_BPF_filter(self):
+        """
+        Return BPF filter to be used with scapy sniff(). Filter matches all packets with
+        source mac in tracked devices given in settings.
+        """
+
         output = ""
         for i in range(len(settings.DEVICES)):
             mac_address = settings.DEVICES[i]
