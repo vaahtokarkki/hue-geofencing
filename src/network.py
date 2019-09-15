@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from scapy.all import *
+from scapy.all import ARP, Ether, srp, sniff, IP
 
 from src.settings import SCAN_INTERVAL, DEVICES, NETWORK_MASK
 
