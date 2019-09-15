@@ -25,7 +25,7 @@ class Hue(object):
         Set all given lights to full brightes. If sun has set, trigger additional light
         settings.
         """
-        for light in settings.ARRIVE_LIGHTS:
+        for light in settings.ARRIVE_LIGHTS():
             self.bridge.set_light(light, 'on', True)
             self.bridge.set_light(light, 'bri', 255)
         if self.sunset.is_past_sunset():

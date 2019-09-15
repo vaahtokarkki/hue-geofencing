@@ -64,7 +64,7 @@ class Sun(object):
         Output: (sunset, sunrise)
         """
 
-        location = settings.LOCATION
+        location = settings.LOCATION()
         if not location:
             raise ValueError("Can not get sun data, location not set")
 

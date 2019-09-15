@@ -2,7 +2,8 @@ import os
 
 from dotenv import load
 
-load()
+if not os.getenv("TEST_RUN", False):
+    load()
 
 
 def _get_devices():
@@ -25,9 +26,9 @@ def _get_location():
         return False
 
     try:
-        location = (int(lat), int(lon))
+        location = (int(float(lat)), int(float(lon)))
     except (ValueError):
-        return False
+        raise ValueError(f"Invalid location {lat}, {lon}")
     return location
 
 
@@ -36,5 +37,5 @@ SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 300)
 NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.1.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices()
-ARRIVE_LIGHTS = _get_arrive_lights()
-LOCATION = _get_location()
+ARRIVE_LIGHTS = _get_arrive_lights
+LOCATION = _get_location
