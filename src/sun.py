@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import requests
 import schedule
 
-import src.settings as settings
+from src.settings import LOCATION
 
 
 class Sun(object):
@@ -64,7 +64,7 @@ class Sun(object):
         Output: (sunset, sunrise)
         """
 
-        location = settings.LOCATION()
+        location = LOCATION()
         if not location:
             raise ValueError("Can not get sun data, location not set")
 

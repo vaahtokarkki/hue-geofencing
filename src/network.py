@@ -3,9 +3,9 @@ import threading
 
 from scapy.all import *
 
-import src.settings as settings
+from src.settings import SCAN_INTERVAL, DEVICES, NETWORK_MASK
 
-SCAN_INTERVAL = settings.SCAN_INTERVAL
+SCAN_INTERVAL = SCAN_INTERVAL
 REFRESH_INTERVAL = 900
 MAX_ARP_TRIES = 5  # How many times ARP ping is sent to one device
 
@@ -45,7 +45,7 @@ class Network(object):
             self.log.info(f"Refresh interval set up with{REFRESH_INTERVAL}s")
             self.log.info("ARP listening active")
 
-    def scan_devices(self, ip=settings.NETWORK_MASK):
+    def scan_devices(self, ip=NETWORK_MASK):
         """
         Scan all devices in network. By default network mask from settings is used, but
         can be overriden from arguments. Found devices are added to devices_online class
@@ -59,7 +59,7 @@ class Network(object):
         for client in answered_list:
             client_mac = str(client[1].hwsrc)
             client_ip = str(client[1].psrc)
-            if client_mac in settings.DEVICES():
+            if client_mac in DEVICES():
                 self.log.debug(f"found device {client_ip} {client_mac}")
                 self._devices_online.add((client_ip, client_mac))
 
@@ -131,7 +131,7 @@ class Network(object):
             self.log.warning(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            if len(self._devices_online) == len(settings.DEVICES()):
+            if len(self._devices_online) == len(DEVICES()):
                 # All devices online, no need to sniff new devices
                 self._stop_sniff.set()
 
@@ -154,9 +154,9 @@ class Network(object):
         """
 
         output = ""
-        for i in range(len(settings.DEVICES())):
-            mac_address = settings.DEVICES()[i]
+        for i in range(len(DEVICES())):
+            mac_address = DEVICES()[i]
             output += f"ether src host {mac_address}"
-            if i < len(settings.DEVICES()) - 1:
+            if i < len(DEVICES()) - 1:
                 output += " or "
         return output
