@@ -34,7 +34,28 @@ def test_location_empty(monkeypatch):
     assert not settings.LOCATION()
 
 
-def testtt(monkeypatch):
-    monkeypatch.setenv("LOCATION_LAT", "66")
-    monkeypatch.setenv("LOCATION_LON", "26")
-    pass
+def test_devices(monkeypatch):
+    monkeypatch.setenv("DEVICES", "00:1B:44:11:3A:B7,E8:FC:AF:B9:BE:A2")
+    reload(settings)
+    assert set(settings.DEVICES()) == {"00:1B:44:11:3A:B7", "E8:FC:AF:B9:BE:A2"}
+
+
+def test_devices_empty(monkeypatch):
+    monkeypatch.setenv("DEVICES", "")
+    with pytest.raises(ValueError):
+        reload(settings)
+        settings.DEVICES()
+
+
+def test_devices_invalid_value(monkeypatch):
+    monkeypatch.setenv("DEVICES", "this is not a mac address")
+    with pytest.raises(ValueError):
+        reload(settings)
+        settings.DEVICES()
+
+
+def test_devices_missing(monkeypatch):
+    monkeypatch.delenv("DEVICES", raising=False)
+    with pytest.raises(ValueError):
+        reload(settings)
+        settings.DEVICES()

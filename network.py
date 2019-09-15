@@ -59,7 +59,7 @@ class Network(object):
         for client in answered_list:
             client_mac = str(client[1].hwsrc)
             client_ip = str(client[1].psrc)
-            if client_mac in settings.DEVICES:
+            if client_mac in settings.DEVICES():
                 self.log.debug(f"found device {client_ip} {client_mac}")
                 self._devices_online.add((client_ip, client_mac))
 
@@ -131,7 +131,7 @@ class Network(object):
             self.log.warning(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            if len(self._devices_online) == len(settings.DEVICES):
+            if len(self._devices_online) == len(settings.DEVICES()):
                 # All devices online, no need to sniff new devices
                 self._stop_sniff.set()
 
@@ -154,9 +154,9 @@ class Network(object):
         """
 
         output = ""
-        for i in range(len(settings.DEVICES)):
+        for i in range(len(settings.DEVICES())):
             mac_address = settings.DEVICES[i]
             output += f"ether src host {mac_address}"
-            if i < len(settings.DEVICES) - 1:
+            if i < len(settings.DEVICES()) - 1:
                 output += " or "
         return output

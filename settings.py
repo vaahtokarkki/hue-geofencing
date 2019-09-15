@@ -36,6 +36,6 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", 20)
 SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 300)
 NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.1.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
-DEVICES = _get_devices()
+DEVICES = _get_devices
 ARRIVE_LIGHTS = _get_arrive_lights
 LOCATION = _get_location
