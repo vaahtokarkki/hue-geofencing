@@ -15,4 +15,4 @@ script:
   - pytest
   - isort -c
   # TODO: Add flake8 validation
-  - docker build -t vaahtokarkki/hue-geofencing
+  - docker build -t vaahtokarkki/hue-geofencing .
