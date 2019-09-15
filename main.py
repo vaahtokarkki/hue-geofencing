@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from src.utils import setup_logger
 from src.hue import Hue
 from src.network import Network
-
+from src.utils import setup_logger
 
 if __name__ == "__main__":
     setup_logger()

@@ -1,9 +1,9 @@
 import logging
 import threading
 
-from scapy.all import ARP, Ether, srp, sniff, IP
+from scapy.all import ARP, IP, Ether, sniff, srp
 
-from src.settings import SCAN_INTERVAL, DEVICES, NETWORK_MASK
+from src.settings import DEVICES, NETWORK_MASK, SCAN_INTERVAL
 
 SCAN_INTERVAL = SCAN_INTERVAL
 REFRESH_INTERVAL = 900
