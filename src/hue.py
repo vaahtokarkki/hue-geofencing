@@ -3,8 +3,8 @@ import warnings
 
 from phue import Bridge
 
-import settings
-from sun import Sun
+import src.settings as settings
+from src.sun import Sun
 
 log = logging.getLogger("main")
 

@@ -3,7 +3,7 @@ import threading
 
 from scapy.all import *
 
-import settings
+import src.settings as settings
 
 SCAN_INTERVAL = settings.SCAN_INTERVAL
 REFRESH_INTERVAL = 900

@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import requests
 import schedule
 
-import settings
+import src.settings as settings
 
 
 class Sun(object):

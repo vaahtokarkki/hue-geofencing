@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import logging
 
-import settings
-from hue import Hue
-from network import Network
+import src.settings as settings
+from src.hue import Hue
+from src.network import Network
 
 if __name__ == "__main__":
     logger = logging.getLogger("main")

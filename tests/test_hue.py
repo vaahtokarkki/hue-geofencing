@@ -2,12 +2,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from hue import Hue
+from src.hue import Hue
 
 
 @pytest.fixture
-@patch('hue.Bridge')
-@patch('sun.threading')
+@patch('src.hue.Bridge')
+@patch('src.sun.threading')
 def hue(bridge, monkeypatch):
     return Hue()
 
@@ -16,7 +16,7 @@ def test_hue_constructor(hue):
     hue.bridge.connect.assert_called_once()
 
 
-@patch('hue.Sun')
+@patch('src.hue.Sun')
 def test_hue_arrive_after_sunset(sun, hue):
     sun.is_past_sunset.return_value = True
 
@@ -28,7 +28,7 @@ def test_hue_arrive_after_sunset(sun, hue):
     # TODO: assert after sunset light/scene call
 
 
-@patch('hue.Sun')
+@patch('src.hue.Sun')
 def test_hue_arrive_beofire_sunset(sun, hue):
     hue.set_arrive()
     for light in ["Light 1", "Light 2"]:

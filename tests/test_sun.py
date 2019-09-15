@@ -2,14 +2,14 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from sun import Sun
+from src.sun import Sun
 
 
 @pytest.fixture
 def mock(mocker):
     mock = mocker.Mock()
-    mocker.patch('sun.requests', mock)
-    mocker.patch('sun.threading.Thread', mock)
+    mocker.patch('src.sun.requests', mock)
+    mocker.patch('src.sun.threading.Thread', mock)
 
     mock.get.return_value.status_code = 200
     mock.get.return_value.json.return_value = {

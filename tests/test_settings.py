@@ -1,7 +1,8 @@
+from importlib import reload
+
 import pytest
 
-from importlib import reload
-import settings
+import src.settings as settings
 
 
 def test_location(monkeypatch):
