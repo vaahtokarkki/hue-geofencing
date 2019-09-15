@@ -13,8 +13,8 @@ install:
 
 script:
   - pytest
+  - flake8
   - isort -c
-  # TODO: Add flake8 validation
   - docker build -t vaahtokarkki/hue-geofencing .
 
 deploy:
