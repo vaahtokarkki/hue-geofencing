@@ -5,7 +5,6 @@ import settings
 from hue import Hue
 from network import Network
 
-
 if __name__ == "__main__":
     logger = logging.getLogger("main")
     logger.setLevel(settings.LOG_LEVEL)
