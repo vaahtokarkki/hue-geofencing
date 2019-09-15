@@ -155,7 +155,7 @@ class Network(object):
 
         output = ""
         for i in range(len(settings.DEVICES())):
-            mac_address = settings.DEVICES[i]
+            mac_address = settings.DEVICES()[i]
             output += f"ether src host {mac_address}"
             if i < len(settings.DEVICES()) - 1:
                 output += " or "
