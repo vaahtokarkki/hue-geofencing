@@ -66,7 +66,7 @@ class Sun(object):
 
         location = settings.LOCATION
         if not location:
-            return False
+            raise ValueError("Can not get sun data, location not set")
 
         resp = requests.get(
             f"https://api.sunrise-sunset.org/json?lat={location[0]}&lng={location[1]}"
