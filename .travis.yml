@@ -16,3 +16,9 @@ script:
   - isort -c
   # TODO: Add flake8 validation
   - docker build -t vaahtokarkki/hue-geofencing .
+
+deploy:
+  provider: script
+  script: bash deploy
+  on:
+    branch: master
