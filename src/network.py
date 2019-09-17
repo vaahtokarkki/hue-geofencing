@@ -83,11 +83,11 @@ class Network(object):
             if self._ping_device(device[0]):
                 continue
 
-            self.log.warning("Lost device", device)
+            self.log.info(f"Lost device {device}")
             self._devices_online.remove(device)
 
         if len(self._devices_online) == 0:
-            self.log.warning("All devices offline")
+            self.log.info("All devices offline")
             self.handle_leave()
 
     def _start_sniff(self, stop_event):
@@ -128,7 +128,7 @@ class Network(object):
         client_ip = str(packet[IP].src)
         device = (client_ip, client_mac)
         if device not in self._devices_online and client_ip != "0.0.0.0":
-            self.log.warning(f"new tracked device joined {device}")
+            self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
             if len(self._devices_online) == len(DEVICES()):
