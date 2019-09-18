@@ -1,13 +1,12 @@
 import logging
 import threading
 
-from scapy.all import ARP, IP, Ether, sniff, srp
+from scapy.all import ARP, IP, Ether, sniff, sr1, ICMP, srp
 
 from src.settings import DEVICES, NETWORK_MASK, SCAN_INTERVAL
 
-SCAN_INTERVAL = SCAN_INTERVAL
 REFRESH_INTERVAL = 900
-MAX_ARP_TRIES = 5  # How many times ARP ping is sent to one device
+MAX_PING_TRIES = 5  # How many times a device is pinged
 
 
 class Network(object):
@@ -41,8 +40,8 @@ class Network(object):
             self._sniff = threading.Thread(target=self._start_sniff,
                                            args=[self._stop_sniff])
             self._sniff.start()
-            self.log.info(f"Scanning interval set up with{SCAN_INTERVAL}s")
-            self.log.info(f"Refresh interval set up with{REFRESH_INTERVAL}s")
+            self.log.info(f"Scanning interval set up with {SCAN_INTERVAL}s")
+            self.log.info(f"Refresh interval set up with {REFRESH_INTERVAL}s")
             self.log.info("ARP listening active")
 
     def scan_devices(self, ip=NETWORK_MASK):
@@ -67,7 +66,7 @@ class Network(object):
 
     def refresh_devices_online(self):
         """ Run scan_devices() for given times """
-        for _ in range(MAX_ARP_TRIES):
+        for _ in range(MAX_PING_TRIES):
             self.scan_devices()
 
     def ping_devices_online(self):
@@ -85,6 +84,7 @@ class Network(object):
 
             self.log.info(f"Lost device {device}")
             self._devices_online.remove(device)
+            self._stop_sniff.clear()
 
         if len(self._devices_online) == 0:
             self.log.info("All devices offline")
@@ -92,11 +92,12 @@ class Network(object):
 
     def _start_sniff(self, stop_event):
         """ Run scapy network sniff with ARP filter """
+        self.log.debug("Sniffing started")
         while not stop_event.is_set():
             sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
 
     def _ping_device(self, device):
-        """ Ping given device with ARP packets. If device is respondin return True,
+        """ Ping given device with ICMP echo packets. If device is respondin return True,
         otherwise Flase.
 
         Core arguments:
@@ -106,12 +107,8 @@ class Network(object):
         if not device:
             return False
 
-        for _ in range(MAX_ARP_TRIES):
-            ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff") /
-                             ARP(pdst=device), timeout=2, verbose=False)
-            if len(ans) > 0:
-                return True
-        return False
+        ans = sr1(IP(dst=device)/ICMP(), retry=MAX_PING_TRIES, timeout=2)
+        return bool(ans)
 
     def handle_packet(self, packet):
         """
@@ -131,7 +128,7 @@ class Network(object):
             self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            if len(self._devices_online) == len(DEVICES()):
+            if self._devices_online == DEVICES():
                 # All devices online, no need to sniff new devices
                 self._stop_sniff.set()
 
