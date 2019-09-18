@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from scapy.all import ARP, IP, Ether, sniff, sr1, ICMP, srp
+from scapy.all import ARP, ICMP, IP, Ether, sniff, sr1, srp
 
 from src.settings import DEVICES, NETWORK_MASK, SCAN_INTERVAL
 
@@ -107,7 +107,7 @@ class Network(object):
         if not device:
             return False
 
-        ans = sr1(IP(dst=device)/ICMP(), retry=MAX_PING_TRIES, timeout=2)
+        ans = sr1(IP(dst=device)/ICMP(), retry=10, timeout=2, verbose=False)
         return bool(ans)
 
     def handle_packet(self, packet):
@@ -128,9 +128,11 @@ class Network(object):
             self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            if self._devices_online == DEVICES():
+            #if self._devices_online == DEVICES():
                 # All devices online, no need to sniff new devices
-                self._stop_sniff.set()
+            #    self._stop_sniff.set()
+            return True
+        return False
 
     def _set_interval(self, func, sec):
         """
