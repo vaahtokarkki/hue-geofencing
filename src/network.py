@@ -1,7 +1,7 @@
 import logging
 import threading
 
-from scapy.all import ARP, ICMP, IP, Ether, sniff, sr1, srp
+from scapy.all import ARP, ICMP, IP, Ether, sniff, sr1, srp, TCP
 
 from src.settings import DEVICES, NETWORK_MASK, SCAN_INTERVAL
 
@@ -107,7 +107,20 @@ class Network(object):
         if not device:
             return False
 
+        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=device), retry=10,
+                         timeout=2, verbose=False)
+        if ans:
+            self.log.debug(f"Host {device} is up, responding to ARP")
+            return True
+
         ans = sr1(IP(dst=device)/ICMP(), retry=10, timeout=2, verbose=False)
+        if ans:
+            self.log.debug(f"Host {device} is up, responding to ICMP Echo")
+            return True
+
+        ans = sr1(IP(dst=device)/TCP(dport=62078), retry=10, timeout=2, verbose=False)
+        if ans:
+            self.log.debug(f"Host {device} is up, responding to ICP port 62078")
         return bool(ans)
 
     def handle_packet(self, packet):
