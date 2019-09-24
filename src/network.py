@@ -1,9 +1,10 @@
 import logging
 import threading
+from subprocess import Popen, PIPE
 
 from scapy.all import ARP, ICMP, IP, Ether, sniff, sr1, srp, TCP
 
-from src.settings import DEVICES, NETWORK_MASK, SCAN_INTERVAL
+from src.settings import BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK, SCAN_INTERVAL
 
 REFRESH_INTERVAL = 900
 MAX_PING_TRIES = 5  # How many times a device is pinged
@@ -34,8 +35,8 @@ class Network(object):
         if track:
             self._ping_interval = self._set_interval(self.ping_devices_online,
                                                      SCAN_INTERVAL)
-            self._refresh_interval = self._set_interval(self.refresh_devices_online,
-                                                        REFRESH_INTERVAL)
+            #self._refresh_interval = self._set_interval(self.refresh_devices_online,
+            #                                            REFRESH_INTERVAL)
             self._stop_sniff = threading.Event()
             self._sniff = threading.Thread(target=self._start_sniff,
                                            args=[self._stop_sniff])
@@ -79,7 +80,7 @@ class Network(object):
             return False
 
         for device in self._devices_online.copy():
-            if self._ping_device(device[0]):
+            if self._ping_device(device[0]) or self._ping_device_bluetooth(device[1]):
                 continue
 
             self.log.info(f"Lost device {device}")
@@ -89,6 +90,61 @@ class Network(object):
         if len(self._devices_online) == 0:
             self.log.info("All devices offline")
             self.handle_leave()
+
+    def handle_packet(self, packet):
+        """
+        Handle detected packet. If source of packet is not present in devices online,
+        trigger join callback function.
+
+        Note: packets must be filtered with _get_BPF_filter() before handling
+        """
+
+        if IP not in packet or Ether not in packet:
+            return
+
+        client_mac = str(packet[Ether].src)
+        client_ip = str(packet[IP].src)
+        device = (client_ip, client_mac)
+        if device not in self._devices_online and client_ip != "0.0.0.0":
+            self.log.info(f"new tracked device joined {device}")
+            self._devices_online.add(device)
+            self.handle_join()
+            #if self._devices_online == DEVICES():
+                # All devices online, no need to sniff new devices
+            #    self._stop_sniff.set()
+
+    def _ping_device_bluetooth(self, device):
+        """
+        Ping Bluetooth device
+
+        Core arguments:
+        device -- Device as wifi mac, bluetooth mac is resolved from settings
+        """
+        bluetooth_mac = self._resolve_bt_mac(device)
+        if not bluetooth_mac:
+            return False
+
+        p = Popen(["l2ping", "-c", "5", "-t", "2", str(bluetooth_mac)], stdout=PIPE,
+                  stderr=PIPE)
+        p.communicate()
+
+        if p.returncode != 0:
+            return False
+
+        self.log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
+        return True
+
+    def _set_interval(self, func, sec):
+        """
+        Set up and start intervall for given function and interval in it's own thread
+        """
+
+        def func_wrapper():
+            self._set_interval(func, sec)
+            func()
+        t = threading.Timer(sec, func_wrapper)
+        t.start()
+        return t
 
     def _start_sniff(self, stop_event):
         """ Run scapy network sniff with ARP filter """
@@ -118,46 +174,11 @@ class Network(object):
             self.log.debug(f"Host {device} is up, responding to ICMP Echo")
             return True
 
-        ans = sr1(IP(dst=device)/TCP(dport=62078), retry=10, timeout=2, verbose=False)
+        ans = sr1(IP(dst=device)/TCP(dport=[5353, 62078]), retry=20, timeout=1,
+                  verbose=False)
         if ans:
             self.log.debug(f"Host {device} is up, responding to ICP port 62078")
         return bool(ans)
-
-    def handle_packet(self, packet):
-        """
-        Handle detected packet. If source of packet is not present in devices online,
-        trigger join callback function.
-
-        Note: packets must be filtered with _get_BPF_filter() before handling
-        """
-
-        if IP not in packet or Ether not in packet:
-            return False
-
-        client_mac = str(packet[Ether].src)
-        client_ip = str(packet[IP].src)
-        device = (client_ip, client_mac)
-        if device not in self._devices_online and client_ip != "0.0.0.0":
-            self.log.info(f"new tracked device joined {device}")
-            self._devices_online.add(device)
-            self.handle_join()
-            #if self._devices_online == DEVICES():
-                # All devices online, no need to sniff new devices
-            #    self._stop_sniff.set()
-            return True
-        return False
-
-    def _set_interval(self, func, sec):
-        """
-        Set up and start intervall for given function and interval in it's own thread
-        """
-
-        def func_wrapper():
-            self._set_interval(func, sec)
-            func()
-        t = threading.Timer(sec, func_wrapper)
-        t.start()
-        return t
 
     def _get_BPF_filter(self):
         """
@@ -172,3 +193,9 @@ class Network(object):
             if i < len(DEVICES()) - 1:
                 output += " or "
         return output
+
+    def _resolve_bt_mac(self, wifi_mac):
+        try:
+            return BLUETOOTH_DEVICES()[wifi_mac]
+        except KeyError:
+            return None
