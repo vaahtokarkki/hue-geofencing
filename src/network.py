@@ -121,7 +121,7 @@ class Network(object):
             return False
 
         p = Popen(["l2ping", "-c", "5", "-t", "2", str(bluetooth_mac)], stdout=PIPE,
-                  stderr=PIPE)
+                  stderr=PIPE, close_fds=True)
         p.communicate()
 
         if p.returncode != 0:
