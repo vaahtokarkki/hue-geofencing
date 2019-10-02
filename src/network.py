@@ -1,10 +1,11 @@
 import logging
 import threading
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
-from scapy.all import ARP, ICMP, IP, Ether, sniff, sr1, srp, TCP
+from scapy.all import ARP, ICMP, IP, TCP, Ether, sniff, sr1, srp
 
-from src.settings import BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK, SCAN_INTERVAL
+from src.settings import (BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK,
+                          SCAN_INTERVAL)
 
 REFRESH_INTERVAL = 900
 MAX_PING_TRIES = 5  # How many times a device is pinged
@@ -35,8 +36,6 @@ class Network(object):
         if track:
             self._ping_interval = self._set_interval(self.ping_devices_online,
                                                      SCAN_INTERVAL)
-            #self._refresh_interval = self._set_interval(self.refresh_devices_online,
-            #                                            REFRESH_INTERVAL)
             self._stop_sniff = threading.Event()
             self._sniff = threading.Thread(target=self._start_sniff,
                                            args=[self._stop_sniff])
@@ -109,9 +108,6 @@ class Network(object):
             self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            #if self._devices_online == DEVICES():
-                # All devices online, no need to sniff new devices
-            #    self._stop_sniff.set()
 
     def _ping_device_bluetooth(self, device):
         """
