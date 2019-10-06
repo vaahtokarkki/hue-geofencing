@@ -51,7 +51,7 @@ def _get_log_level():
 
 
 LOG_LEVEL = _get_log_level
-SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 2)
+SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 5)
 NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.1.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices

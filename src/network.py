@@ -33,7 +33,7 @@ class Network(object):
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
-        #self.scan_devices()
+        self.scan_devices()
         if track:
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
             self._scheduler = threading.Thread(target=self._run_schedule)
