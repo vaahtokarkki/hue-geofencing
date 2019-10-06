@@ -1,13 +1,14 @@
 import logging
 import threading
+import time
 from subprocess import PIPE, Popen
 
+import schedule
 from scapy.all import ARP, ICMP, IP, TCP, Ether, sniff, sr1, srp
 
 from src.settings import (BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK,
                           SCAN_INTERVAL)
 
-REFRESH_INTERVAL = 900
 MAX_PING_TRIES = 5  # How many times a device is pinged
 
 
@@ -32,42 +33,20 @@ class Network(object):
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
-        self.refresh_devices_online()
+        #self.scan_devices()
         if track:
-            self._ping_interval = self._set_interval(self.ping_devices_online,
-                                                     SCAN_INTERVAL)
-            self._stop_sniff = threading.Event()
-            self._sniff = threading.Thread(target=self._start_sniff,
-                                           args=[self._stop_sniff])
+            schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
+            self._scheduler = threading.Thread(target=self._run_schedule)
+            self._scheduler.start()
+            self._sniff = threading.Thread(target=self._start_sniff)
             self._sniff.start()
-            self.log.info(f"Scanning interval set up with {SCAN_INTERVAL}s")
-            self.log.info(f"Refresh interval set up with {REFRESH_INTERVAL}s")
-            self.log.info("ARP listening active")
+            self.log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
+            self.log.info("Packet listening active")
 
-    def scan_devices(self, ip=NETWORK_MASK):
-        """
-        Scan all devices in network. By default network mask from settings is used, but
-        can be overriden from arguments. Found devices are added to devices_online class
-        variable.
-        """
-
-        arp_request = ARP(pdst=ip)
-        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
-        arp_request_broadcast = broadcast/arp_request
-        answered_list = srp(arp_request_broadcast, timeout=2, verbose=False)[0]
-        for client in answered_list:
-            client_mac = str(client[1].hwsrc)
-            client_ip = str(client[1].psrc)
-            if client_mac in DEVICES():
-                self.log.debug(f"found device {client_ip} {client_mac}")
-                self._devices_online.add((client_ip, client_mac))
-
-        self.log.debug(f"tracked devcices online {self._devices_online}")
-
-    def refresh_devices_online(self):
-        """ Run scan_devices() for given times """
+    def scan_devices(self):
+        """ Run _scan_network() for given times """
         for _ in range(MAX_PING_TRIES):
-            self.scan_devices()
+            self._scan_network()
 
     def ping_devices_online(self):
         """
@@ -75,7 +54,7 @@ class Network(object):
         False and remove device from devices_online set. If all devices are removed from
         set, trigger handle_leave callback function
         """
-        if len(self._devices_online) == 0:
+        if not self._devices_online:
             return False
 
         for device in self._devices_online.copy():
@@ -84,9 +63,8 @@ class Network(object):
 
             self.log.info(f"Lost device {device}")
             self._devices_online.remove(device)
-            self._stop_sniff.clear()
 
-        if len(self._devices_online) == 0:
+        if not self._devices_online:
             self.log.info("All devices offline")
             self.handle_leave()
 
@@ -130,23 +108,10 @@ class Network(object):
         self.log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
         return True
 
-    def _set_interval(self, func, sec):
-        """
-        Set up and start intervall for given function and interval in it's own thread
-        """
-
-        def func_wrapper():
-            self._set_interval(func, sec)
-            func()
-        t = threading.Timer(sec, func_wrapper)
-        t.start()
-        return t
-
-    def _start_sniff(self, stop_event):
+    def _start_sniff(self):
         """ Run scapy network sniff with ARP filter """
         self.log.debug("Sniffing started")
-        while not stop_event.is_set():
-            sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
+        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet)
 
     def _ping_device(self, device):
         """ Ping given device with ICMP echo packets. If device is respondin return True,
@@ -195,3 +160,32 @@ class Network(object):
             return BLUETOOTH_DEVICES()[wifi_mac]
         except KeyError:
             return None
+
+    def _run_schedule(self):
+        """
+        Start loop for scheduler. This should be run at own thread to prevent blocking
+        """
+
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
+
+    def _scan_network(self, ip=NETWORK_MASK):
+        """
+        Scan all devices in network. By default network mask from settings is used, but
+        can be overriden from arguments. Found devices are added to devices_online class
+        variable.
+        """
+
+        arp_request = ARP(pdst=ip)
+        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+        arp_request_broadcast = broadcast/arp_request
+        answered_list = srp(arp_request_broadcast, timeout=2, verbose=False)[0]
+        for client in answered_list:
+            client_mac = str(client[1].hwsrc)
+            client_ip = str(client[1].psrc)
+            if client_mac in DEVICES():
+                self.log.debug(f"found device {client_ip} {client_mac}")
+                self._devices_online.add((client_ip, client_mac))
+
+        self.log.debug(f"tracked devcices online {self._devices_online}")
