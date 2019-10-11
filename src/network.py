@@ -111,7 +111,7 @@ class Network(object):
     def _start_sniff(self):
         """ Run scapy network sniff with ARP filter """
         self.log.debug("Sniffing started")
-        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=1)
+        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False)
 
     def _ping_device(self, device):
         """ Ping given device with ICMP echo packets. If device is respondin return True,
