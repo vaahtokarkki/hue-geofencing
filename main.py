@@ -4,7 +4,6 @@ from src.hue import Hue
 from src.network import Network
 from src.utils import setup_logger
 
-
 if __name__ == "__main__":
     setup_logger()
     hue = Hue()

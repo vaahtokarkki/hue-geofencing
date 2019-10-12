@@ -5,7 +5,6 @@ chardet==3.0.4
 coverage==4.5.4
 entrypoints==0.3
 flake8==3.7.8
-guppy3==3.0.8
 idna==2.8
 importlib-metadata==0.19
 isort==4.3.21
