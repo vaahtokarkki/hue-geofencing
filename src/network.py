@@ -36,10 +36,9 @@ class Network(object):
         self.scan_devices()
         if track:
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
-            self._scheduler = threading.Thread(target=self._run_schedule)
-            self._scheduler.start()
-            self._sniff = threading.Thread(target=self._start_sniff)
-            self._sniff.start()
+            self._scheduler = threading.Thread(target=self._run_schedule).start()
+            self._sniff = threading.Thread(target=self._run_sniff).start()
+            self._stop_sniff = threading.Event().set()
             self.log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
             self.log.info("Packet listening active")
 
@@ -63,6 +62,7 @@ class Network(object):
 
             self.log.info(f"Lost device {device}")
             self._devices_online.remove(device)
+            self._stop_sniff.clear()
 
         if not self._devices_online:
             self.log.info("All devices offline")
@@ -86,6 +86,8 @@ class Network(object):
             self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
+            if len(DEVICES()) == len(self._devices_online):
+                self._stop_sniff.set()
 
     def _ping_device_bluetooth(self, device):
         """
@@ -108,10 +110,15 @@ class Network(object):
         self.log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
         return True
 
-    def _start_sniff(self):
+    def _run_sniff(self):
         """ Run scapy network sniff with ARP filter """
-        self.log.debug("Sniffing started")
-        sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False)
+        while True:
+            if not self._stop_sniff.isSet():
+                self.log.debug("Sniffing started")
+                sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False,
+                      stop_filter=self._stop_sniff.isSet())
+                self.log.debug("Sniffing stoped")
+            time.sleep(60)
 
     def _ping_device(self, device):
         """ Ping given device with ICMP echo packets. If device is respondin return True,
