@@ -35,10 +35,10 @@ class Network(object):
         self._devices_online = set()
         self.scan_devices()
         if track:
+            self._stop_sniff = threading.Event()
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
             self._scheduler = threading.Thread(target=self._run_schedule).start()
             self._sniff = threading.Thread(target=self._run_sniff).start()
-            self._stop_sniff = threading.Event().set()
             self.log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
             self.log.info("Packet listening active")
 
