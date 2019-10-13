@@ -33,14 +33,15 @@ class Network(object):
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
+        self._stop_sniff = threading.Event()
         self.scan_devices()
         if track:
-            self._stop_sniff = threading.Event()
+            self.log.info("Tracking active")
+            self._ping_running = False  # Lock to prevent multiple ping devices calls
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
             self._scheduler = threading.Thread(target=self._run_schedule).start()
             self._sniff = threading.Thread(target=self._run_sniff).start()
             self.log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
-            self.log.info("Packet listening active")
 
     def scan_devices(self):
         """ Run _scan_network() for given times """
@@ -53,20 +54,22 @@ class Network(object):
         False and remove device from devices_online set. If all devices are removed from
         set, trigger handle_leave callback function
         """
-        if not self._devices_online:
+        # Add lock boolean variable to prevent multiple pingings
+        if not self._devices_online or self._ping_running:
             return False
 
+        self._ping_running = True
         for device in self._devices_online.copy():
             if self._ping_device(device[0]) or self._ping_device_bluetooth(device[1]):
                 continue
 
             self.log.info(f"Lost device {device}")
-            self._devices_online.remove(device)
             self._stop_sniff.clear()
 
         if not self._devices_online:
             self.log.info("All devices offline")
             self.handle_leave()
+        self._ping_running = False
 
     def handle_packet(self, packet):
         """
@@ -86,7 +89,7 @@ class Network(object):
             self.log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
-            if len(DEVICES()) == len(self._devices_online):
+            if self._all_devices_online():
                 self._stop_sniff.set()
 
     def _ping_device_bluetooth(self, device):
@@ -116,9 +119,12 @@ class Network(object):
             if not self._stop_sniff.isSet():
                 self.log.debug("Sniffing started")
                 sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False,
-                      stop_filter=self._stop_sniff.isSet)
+                      stop_filter=self._should_stop_sniff)
                 self.log.debug("Sniffing stoped")
             time.sleep(60)
+
+    def _should_stop_sniff(self, packet):
+        return self._stop_sniff.isSet()
 
     def _ping_device(self, device):
         """ Ping given device with ICMP echo packets. If device is respondin return True,
@@ -196,3 +202,9 @@ class Network(object):
                 self._devices_online.add((client_ip, client_mac))
 
         self.log.debug(f"tracked devcices online {self._devices_online}")
+        if self._all_devices_online():
+            self._stop_sniff.set()
+
+    def _all_devices_online(self):
+        """ Return True if all residents are currently at home """
+        return len(DEVICES()) == len(self._devices_online)
