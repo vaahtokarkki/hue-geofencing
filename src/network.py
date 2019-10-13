@@ -116,7 +116,7 @@ class Network(object):
             if not self._stop_sniff.isSet():
                 self.log.debug("Sniffing started")
                 sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False,
-                      stop_filter=self._stop_sniff.isSet())
+                      stop_filter=self._stop_sniff.isSet)
                 self.log.debug("Sniffing stoped")
             time.sleep(60)
 
