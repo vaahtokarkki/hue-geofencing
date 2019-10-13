@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing)
+[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) [![Maintainability](https://api.codeclimate.com/v1/badges/3f55e42840cda2ea959b/maintainability)](https://codeclimate.com/github/vaahtokarkki/hue-geofencing/maintainability)
 
 # Hue geofencing
 
