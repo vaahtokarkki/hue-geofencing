@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) ![Docker Build Status](https://img.shields.io/docker/build/vaahtokarkki/hue-geofencing)
-
+[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing)
 
 # Hue geofencing
 
