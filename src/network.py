@@ -64,6 +64,7 @@ class Network(object):
                 continue
 
             self.log.info(f"Lost device {device}")
+            self._devices_online.remove(device)
             self._stop_sniff.clear()
 
         if not self._devices_online:
