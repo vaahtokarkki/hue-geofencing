@@ -33,6 +33,12 @@ def test_hue_arrive_after_sunset(hue):
     hue.bridge.activate_scene.assert_called_once_with(1, "scene_id")
 
 
+def test_hue_arrive_after_sunset_invalid_scene(hue):
+    hue.sunset.is_past_sunset.return_value = True
+    hue.bridge.scenes[0].name = "Invalid scene name"
+    hue.set_arrive()
+    hue.bridge.activate_scene.assert_not_called()
+
 @patch('src.hue.Sun')
 def test_hue_arrive_beofire_sunset(sun, hue):
     hue.set_arrive()
