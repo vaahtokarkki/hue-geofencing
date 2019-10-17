@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) [![Maintainability](https://api.codeclimate.com/v1/badges/3f55e42840cda2ea959b/maintainability)](https://codeclimate.com/github/vaahtokarkki/hue-geofencing/maintainability)
+[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) [![Maintainability](https://api.codeclimate.com/v1/badges/3f55e42840cda2ea959b/maintainability)](https://codeclimate.com/github/vaahtokarkki/hue-geofencing/maintainability) [![codecov](https://codecov.io/gh/vaahtokarkki/hue-geofencing/branch/master/graph/badge.svg)](https://codecov.io/gh/vaahtokarkki/hue-geofencing)
+
 
 # Hue geofencing
 
@@ -88,7 +89,7 @@ Server updates sunset and sunrise times once in a day. Home location is needed f
 ## Built with
 * [scapy](https://github.com/secdev/scapy) - Network monitoring
 * [phue](https://github.com/studioimaginaire/phue) - Hue light controls
-* [scheduler](https://github.com/dbader/schedule) - Schedule tasks
+* [schedule](https://github.com/dbader/schedule) - Schedule tasks
 * [requests](https://2.python-requests.org/en/master/) - HTTP client
 
 ## Roadmap
