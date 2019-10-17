@@ -40,9 +40,11 @@ class Hue(object):
 
     def activate_scene(self, name):
         """ Activate scene by name """
-        scene_id, group_id = self._resolve_scene(name)
-        if scene_id and group_id:
-            self.bridge.activate_scene(group_id, scene_id)
+        scene = self._resolve_scene(name)
+        if not scene:
+            return
+        scene_id, group_id = scene
+        self.bridge.activate_scene(group_id, scene_id)
 
     def _resolve_scene(self, name):
         """
