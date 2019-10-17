@@ -16,6 +16,9 @@ script:
   - flake8
   - isort -c
 
+after_script:
+  - codecov --token=CODECOV_TOKEN
+
 deploy:
   provider: script
   script: bash deploy.sh
