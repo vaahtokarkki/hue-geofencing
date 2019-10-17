@@ -57,4 +57,5 @@ BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices
 BLUETOOTH_DEVICES = _get_bluetooth_devices
 ARRIVE_LIGHTS = _get_arrive_lights
+AFTER_SUNSET_SCENE = os.getenv("AFTER_SUNSET", None)
 LOCATION = _get_location
