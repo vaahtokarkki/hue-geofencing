@@ -1,4 +1,5 @@
 import logging
+import time
 
 from phue import Bridge
 
@@ -36,7 +37,7 @@ class Hue(object):
     def set_leave_home(self):
         """ Turn off all lights """
         for light in self.bridge.lights:
-            light.on = False
+            self._turn_off_light(light)
 
     def activate_scene(self, name):
         """ Activate scene by name """
@@ -55,3 +56,20 @@ class Hue(object):
             if scene.name == name:
                 return (scene.scene_id, scene.group)
         return None
+
+    def _turn_off_light(self, light):
+        """
+        Utility function to turn off given light and catch possible OSError.
+
+        OSError gets raised sometimes witch coded 101 Network is unreachable. Try to turn
+        off light given times again if exception is raised.
+
+        Returns True if light is turned off succesfully, otherwise False
+        """
+        for _ in range(10):
+            try:
+                light.on = False
+                return True
+            except OSError:
+                time.sleep(0.5)
+        return False
