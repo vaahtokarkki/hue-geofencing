@@ -72,4 +72,6 @@ class Hue(object):
                 return True
             except OSError:
                 time.sleep(0.5)
+
+        log.debug(f"Failed to turn off light {light}")
         return False

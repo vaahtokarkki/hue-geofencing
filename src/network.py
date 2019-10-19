@@ -10,6 +10,7 @@ from src.settings import (BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK,
                           SCAN_INTERVAL)
 
 MAX_PING_TRIES = 5  # How many times a device is pinged
+log = logging.getLogger("main")
 
 
 class Network(object):
@@ -29,19 +30,21 @@ class Network(object):
         track -- Start ARP packet sniffing and interval to scan network, default True
         """
 
-        self.log = logging.getLogger("main")
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
         self._stop_sniff = threading.Event()
         self.scan_devices()
         if track:
-            self.log.info("Tracking active")
-            self._ping_running = False  # Lock to prevent multiple ping devices calls
+            log.info("Tracking active")
+
+            # A lock to prevent multiple ping calls at the same time
+            self._ping_running = False
+
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
             self._scheduler = threading.Thread(target=self._run_schedule).start()
             self._sniff = threading.Thread(target=self._run_sniff).start()
-            self.log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
+            log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
 
     def scan_devices(self):
         """ Run _scan_network() for given times """
@@ -62,12 +65,12 @@ class Network(object):
             if self._ping_device(device[0]) or self._ping_device_bluetooth(device[1]):
                 continue
 
-            self.log.info(f"Lost device {device}")
+            log.info(f"Lost device {device}")
             self._devices_online.remove(device)
             self._stop_sniff.clear()
 
         if not self._devices_online:
-            self.log.info("All devices offline")
+            log.info("All devices offline")
             self.handle_leave()
         self._ping_running = False
 
@@ -86,7 +89,7 @@ class Network(object):
         client_ip = str(packet[IP].src)
         device = (client_ip, client_mac)
         if device not in self._devices_online and client_ip != "0.0.0.0":
-            self.log.info(f"new tracked device joined {device}")
+            log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
             if self._all_devices_online():
@@ -110,17 +113,17 @@ class Network(object):
         if p.returncode != 0:
             return False
 
-        self.log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
+        log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
         return True
 
     def _run_sniff(self):
         """ Run scapy network sniff with BPF filter """
         while True:
             if not self._stop_sniff.isSet():
-                self.log.debug("Sniffing started")
+                log.debug("Sniffing started")
                 sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False,
                       stop_filter=self._should_stop_sniff)
-                self.log.debug("Sniffing stopped")
+                log.debug("Sniffing stopped")
             time.sleep(60)
 
     def _should_stop_sniff(self, packet):
@@ -149,18 +152,18 @@ class Network(object):
         ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=device), retry=10,
                          timeout=2, verbose=False)
         if ans:
-            self.log.debug(f"Host {device} is up, responding to ARP")
+            log.debug(f"Host {device} is up, responding to ARP")
             return True
 
         ans = sr1(IP(dst=device)/ICMP(), retry=10, timeout=2, verbose=False)
         if ans:
-            self.log.debug(f"Host {device} is up, responding to ICMP Echo")
+            log.debug(f"Host {device} is up, responding to ICMP Echo")
             return True
 
         ans = sr1(IP(dst=device)/TCP(dport=[5353, 62078]), retry=20, timeout=1,
                   verbose=False)
         if ans:
-            self.log.debug(f"Host {device} is up, responding to ICP port 62078")
+            log.debug(f"Host {device} is up, responding to ICP port 62078")
         return bool(ans)
 
     def _get_BPF_filter(self):
@@ -207,10 +210,10 @@ class Network(object):
             client_mac = str(client[1].hwsrc)
             client_ip = str(client[1].psrc)
             if client_mac in DEVICES():
-                self.log.debug(f"found device {client_ip} {client_mac}")
+                log.debug(f"found device {client_ip} {client_mac}")
                 self._devices_online.add((client_ip, client_mac))
 
-        self.log.debug(f"tracked devices online {self._devices_online}")
+        log.debug(f"tracked devices online {self._devices_online}")
         if self._all_devices_online():
             self._stop_sniff.set()
 
