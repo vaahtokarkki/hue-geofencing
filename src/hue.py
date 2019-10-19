@@ -11,7 +11,7 @@ log = logging.getLogger("main")
 
 class Hue(object):
     """
-    Classs to control Hue lights. Provides methods to trigger lights with full brightness
+    Class to control Hue lights. Provides methods to trigger lights with full brightness
     when user arrives home and turn off all lights when all users have left home
     """
     def __init__(self):
@@ -22,7 +22,7 @@ class Hue(object):
 
     def set_arrive(self):
         """
-        Set all given lights to full brightes. If sun has set, trigger additional light
+        Set all given lights to full brightness. If sun has set, trigger additional light
         settings.
         """
         for light in ARRIVE_LIGHTS():
@@ -64,7 +64,7 @@ class Hue(object):
         OSError gets raised sometimes witch coded 101 Network is unreachable. Try to turn
         off light given times again if exception is raised.
 
-        Returns True if light is turned off succesfully, otherwise False
+        Returns True if light is turned off successfully, otherwise False
         """
         for _ in range(10):
             try:

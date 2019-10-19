@@ -26,7 +26,7 @@ class Sun(object):
 
     def update(self):
         """
-        Update sunset and timestamp class variables. Returns True if sunset udpated
+        Update sunset and timestamp class variables. Returns True if sunset updated
         successfully othervise False
         """
         data = self._get_sunset_sunrise()
@@ -57,7 +57,7 @@ class Sun(object):
 
     def _get_sunset_sunrise(self):
         """
-        Return sunset and sunrise as datetime obejct in tuple or False if sunset
+        Return sunset and sunrise as datetime object in tuple or False if sunset
         time fetch failed. Sun time is fetched from external api and requires to
         location to be defined and valid in settings.
 

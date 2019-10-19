@@ -54,7 +54,6 @@ class Network(object):
         False and remove device from devices_online set. If all devices are removed from
         set, trigger handle_leave callback function
         """
-        # Add lock boolean variable to prevent multiple pingings
         if not self._devices_online or self._ping_running:
             return False
 
@@ -115,24 +114,33 @@ class Network(object):
         return True
 
     def _run_sniff(self):
-        """ Run scapy network sniff with ARP filter """
+        """ Run scapy network sniff with BPF filter """
         while True:
             if not self._stop_sniff.isSet():
                 self.log.debug("Sniffing started")
                 sniff(filter=self._get_BPF_filter(), prn=self.handle_packet, store=False,
                       stop_filter=self._should_stop_sniff)
-                self.log.debug("Sniffing stoped")
+                self.log.debug("Sniffing stopped")
             time.sleep(60)
 
     def _should_stop_sniff(self, packet):
         return self._stop_sniff.isSet()
 
     def _ping_device(self, device):
-        """ Ping given device with ICMP echo packets. If device is respondin return True,
-        otherwise Flase.
+        """
+        Ping given device with multiple different methods on network layer. If device is
+        responding return True, otherwise False.
+
+        Ping is done with following steps:
+            1. Ping with ARP packet
+            2. Ping ICMP echo packet
+            3. Ping with TCP packets to ports 5353 and 62078.
+               (Used in iPhone for Bonjour service and wifi-sync)
 
         Core arguments:
-        device -- Device ip address as string, for example '192.168.1.101'
+            device -- Device ip address as string, for example '192.168.1.101'
+        Returns:
+            boolean --- If device is responding
         """
 
         if not device:
@@ -187,7 +195,7 @@ class Network(object):
     def _scan_network(self, ip=NETWORK_MASK):
         """
         Scan all devices in network. By default network mask from settings is used, but
-        can be overriden from arguments. Found devices are added to devices_online class
+        can be overridden from arguments. Found devices are added to devices_online class
         variable.
         """
 
@@ -202,7 +210,7 @@ class Network(object):
                 self.log.debug(f"found device {client_ip} {client_mac}")
                 self._devices_online.add((client_ip, client_mac))
 
-        self.log.debug(f"tracked devcices online {self._devices_online}")
+        self.log.debug(f"tracked devices online {self._devices_online}")
         if self._all_devices_online():
             self._stop_sniff.set()
 
