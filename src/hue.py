@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from phue import Bridge
@@ -15,7 +16,8 @@ class Hue(object):
     when user arrives home and turn off all lights when all users have left home
     """
     def __init__(self):
-        self.bridge = Bridge(BRIDGE_IP)
+        config_path = f"{os.getcwd()}/.phue_config"
+        self.bridge = Bridge(BRIDGE_IP, config_file_path=config_path)
         self.bridge.connect()
         self.sunset = Sun()
         log.info("Connected to Hue bridge!")

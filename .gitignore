@@ -9,3 +9,4 @@ htmlcov
 .coverage
 **/*.pyc
 coverage.xml
+.phue_config
