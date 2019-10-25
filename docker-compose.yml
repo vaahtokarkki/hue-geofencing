@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  amd64:
+    image: vaahtokarkki/hue-geofencing:amd64
+    build:
+      context: .
+      dockerfile: ./docker/amd64.Dockerfile
+    env_file:
+      - './.env'
+    volumes:
+      - .:/usr/src/app
+  armv6:
+    image: vaahtokarkki/hue-geofencing:armv6
+    build:
+      context: .
+      dockerfile: ./docker/armv6.Dockerfile
+    env_file:
+      - './.env'
+    volumes:
+      - .:/usr/src/app
+  armv7:
+    image: vaahtokarkki/hue-geofencing:armv7
+    build:
+      context: .
+      dockerfile: ./docker/armv7.Dockerfile
+    env_file:
+      - './.env'
+    volumes:
+      - .:/usr/src/app
