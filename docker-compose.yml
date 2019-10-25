@@ -10,6 +10,8 @@ services:
       - './.env'
     volumes:
       - .:/usr/src/app
+    restart: unless-stopped
+    network_mode: host
   armv6:
     image: vaahtokarkki/hue-geofencing:armv6
     build:
@@ -19,6 +21,8 @@ services:
       - './.env'
     volumes:
       - .:/usr/src/app
+    restart: unless-stopped
+    network_mode: host
   armv7:
     image: vaahtokarkki/hue-geofencing:armv7
     build:
@@ -28,3 +32,5 @@ services:
       - './.env'
     volumes:
       - .:/usr/src/app
+    restart: unless-stopped
+    network_mode: host
