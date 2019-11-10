@@ -31,6 +31,10 @@ def _get_arrive_lights():
     return os.getenv("ARRIVE_LIGHTS", "").split(",")
 
 
+def _get_excluded_lights():
+    return os.getenv("EXCLUDE_LIGHTS", "").split(",")
+
+
 def _get_location():
     lat = os.getenv("LOCATION_LAT")
     lon = os.getenv("LOCATION_LON")
@@ -57,5 +61,6 @@ BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices
 BLUETOOTH_DEVICES = _get_bluetooth_devices
 ARRIVE_LIGHTS = _get_arrive_lights
+EXCLUDE_LIGHTS = _get_excluded_lights
 AFTER_SUNSET_SCENE = os.getenv("AFTER_SUNSET", None)
 LOCATION = _get_location

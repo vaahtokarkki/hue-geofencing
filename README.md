@@ -26,6 +26,7 @@ Create `.env` file based on [.env.example](https://github.com/vaahtokarkki/hue-g
 Set on `.env` ip-address of Hue bridge, names of lights that turn on when arriving home, and devices which to track. Multiple values can be inserted to `DEVICES` and `ARRIVE_LIGHTS`, separated by `,`.
 
 Additional configuration:
+* `EXCLUDE_LIGHTS`, lights to exclude when turning of all lights
 * `BLUETOOTH_DEVICES`, Bluetooth mac address for given devices in format `wifi-mac;bt-mac` separated by `,`
 * `LOCATION_LAT` and `LOCATION_LON`, required for getting sunset.
 * `LOG_LEVEL`, Python logger level, default `INFO`

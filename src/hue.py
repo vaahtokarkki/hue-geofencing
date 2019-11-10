@@ -4,7 +4,8 @@ import time
 
 from phue import Bridge
 
-from src.settings import AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP
+from src.settings import (AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP,
+                          EXCLUDE_LIGHTS)
 from src.sun import Sun
 
 log = logging.getLogger("main")
@@ -39,6 +40,8 @@ class Hue(object):
     def set_leave_home(self):
         """ Turn off all lights """
         for light in self.bridge.lights:
+            if light.name in EXCLUDE_LIGHTS():
+                continue
             self._turn_off_light(light)
 
     def activate_scene(self, name):
