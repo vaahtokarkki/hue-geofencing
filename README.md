@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) [![Maintainability](https://api.codeclimate.com/v1/badges/3f55e42840cda2ea959b/maintainability)](https://codeclimate.com/github/vaahtokarkki/hue-geofencing/maintainability) [![codecov](https://codecov.io/gh/vaahtokarkki/hue-geofencing/branch/master/graph/badge.svg)](https://codecov.io/gh/vaahtokarkki/hue-geofencing)
+[![Build Status](https://travis-ci.com/vaahtokarkki/hue-geofencing.svg?token=xtdNg3EhGgxQjprnxrFy&branch=master)](https://travis-ci.com/vaahtokarkki/hue-geofencing) [![Maintainability](https://api.codeclimate.com/v1/badges/3f55e42840cda2ea959b/maintainability)](https://codeclimate.com/github/vaahtokarkki/hue-geofencing/maintainability) [![codecov](https://codecov.io/gh/vaahtokarkki/hue-geofencing/branch/master/graph/badge.svg)](https://codecov.io/gh/vaahtokarkki/hue-geofencing) [![Docker hub](https://img.shields.io/badge/Docker-Hub-blue)](https://hub.docker.com/r/vaahtokarkki/hue-geofencing/tags)
 
 
 # Hue geofencing
@@ -33,13 +33,19 @@ Additional configuration:
 * `NETWORK_MASK`, network mask to scan initially when starting server
 * `SCAN_INTERVAL`, how often to ping devices currently at home
 
-**Docker coming soon**
+### Run with Docker Compose
 
 ```
-docker run --env-file ".env" -d --name "hue-geofencing" vaahtokarkki/hue-geofencing
+$ git clone https://github.com/vaahtokarkki/hue-geofencing
+$ cd hue-geofencing
+$ docker-compose run armv6
 ```
 
-For best IoT-experience run Docker with Watchtower for automatic updates.
+Available environments on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
+
+Docker images can be found on [Docker Hub](https://hub.docker.com/repository/docker/vaahtokarkki/hue-geofencing)
+
+For best IoT-experience run Docker with [Watchtower](https://github.com/containrrr/watchtower) for automatic updates.
 
 ### Setup for other platforms
 Server can be run also with python.
