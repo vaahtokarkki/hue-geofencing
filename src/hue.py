@@ -47,18 +47,22 @@ class Hue(object):
     def activate_scene(self, name):
         """ Activate scene by name """
         scene = self._resolve_scene(name)
-        if not scene or self._scene_lights_on(scene):
+        if not scene or not self._scene_lights_off(scene):
             return
         self.bridge.activate_scene(scene.group, scene.scene_id)
 
-    def _scene_lights_on(self, scene):
+    def _scene_lights_off(self, scene):
         """
         Return True if any of lights in given scene is turned on
         """
         if not scene or not scene.lights:
             return False
 
-        return not all(light.on is False for light in scene.lights)
+        scene_lights = self._get_lights(scene.lights)
+        return all(light.on is False for light in scene_lights)
+
+    def _get_lights(self, lights):
+        return [light for light in self.bridge.lights if light.light_id in lights]
 
     def _resolve_scene(self, name):
         """
