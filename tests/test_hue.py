@@ -6,20 +6,25 @@ from src.hue import Hue
 
 
 @pytest.fixture
-def scene():
+def lights():
+    list_of_lights = []
+    for i in range(1, 5):
+        light = Mock()
+        light.on = False
+        light.brightness = 200
+        light.light_id = i
+        light.name = f"Light {i}"
+        list_of_lights.append(light)
+    return list_of_lights
+
+
+@pytest.fixture
+def scene(lights):
     scene = Mock()
     scene.name = "After sunset scene"
     scene.group = 1
     scene.scene_id = "scene_id"
-
-    lights = []
-    for _ in range(3):
-        light = Mock()
-        light.on = False
-        light.brightness = 200
-        lights.append(light)
-    scene.lights = lights
-    print(vars(scene))
+    scene.lights = [lights[2].light_id, lights[3].light_id]
     return scene
 
 
@@ -27,9 +32,10 @@ def scene():
 @patch('src.hue.Bridge')
 @patch('src.sun.threading')
 @patch('src.hue.Sun')
-def hue(bridge, monkeypatch, sun, scene):
+def hue(bridge, monkeypatch, sun, scene, lights):
     hue = Hue()
     hue.bridge.scenes = [scene]
+    hue.bridge.lights = lights
     return hue
 
 
@@ -57,8 +63,8 @@ def test_hue_arrive_after_sunset_invalid_scene(hue):
 def test_hue_arrive_when_scene_activated(hue):
     hue.sunset.is_past_sunset.return_value = True
 
-    for scene_light in hue.bridge.scenes[0].lights:
-        scene_light.on = True
+    hue.bridge.lights[2].on = True
+    hue.bridge.lights[3].on = True
 
     hue.set_arrive()
     hue.bridge.activate_scene.assert_not_called()
