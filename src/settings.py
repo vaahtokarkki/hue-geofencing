@@ -56,6 +56,12 @@ def _get_log_level():
 
 LOG_LEVEL = _get_log_level
 SCAN_INTERVAL = os.getenv("SCAN_INTERVAL", 5)
+DISABLE_START = os.getenv("DISABLE_START")  # Disable start hours
+if DISABLE_START:
+    DISABLE_START = int(DISABLE_START)
+DISABLE_END = os.getenv("DISABLE_END")  # Disable end hours
+if DISABLE_END:
+    DISABLE_END = int(DISABLE_END)
 NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.11.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices

@@ -32,6 +32,7 @@ Additional configuration:
 * `LOG_LEVEL`, Python logger level, default `INFO`
 * `NETWORK_MASK`, network mask to scan initially when starting server
 * `SCAN_INTERVAL`, how often to ping devices currently at home
+* `DISABLE_START` and `DISABLE_END`, range in hours when home arrive action should be disabled
 
 ### Run with Docker Compose
 

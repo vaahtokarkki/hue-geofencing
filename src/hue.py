@@ -1,11 +1,12 @@
 import logging
 import os
 import time
+from datetime import datetime, timedelta
 
 from phue import Bridge
 
 from src.settings import (AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP,
-                          EXCLUDE_LIGHTS)
+                          EXCLUDE_LIGHTS, DISABLE_END, DISABLE_START)
 from src.sun import Sun
 
 log = logging.getLogger("main")
@@ -28,6 +29,10 @@ class Hue(object):
         Set all given lights to full brightness. If sun has set, trigger additional light
         settings.
         """
+        print("lkjvlkfjg", self._is_disabled_time())
+        if self._is_disabled_time():
+            return
+
         for light in ARRIVE_LIGHTS():
             self.bridge.set_light(light, 'on', True)
             self.bridge.set_light(light, 'bri', 255)
@@ -92,3 +97,17 @@ class Hue(object):
 
         log.debug(f"Failed to turn off light {light}")
         return False
+
+    def _is_disabled_time(self):
+        if not DISABLE_START or not DISABLE_END:
+            return False
+
+        now = datetime.now()
+        start = now.replace(hour=DISABLE_START, minute=0, second=0, microsecond=0)
+        end = now.replace(hour=DISABLE_END, minute=0, second=0, microsecond=0)
+        if now.hour < DISABLE_START:
+            start -= timedelta(days=1)
+        if now.hour > DISABLE_START:
+            end += timedelta(days=1)
+
+        return now > start and now < end

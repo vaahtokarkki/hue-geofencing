@@ -42,6 +42,7 @@ class Network(object):
             self._ping_running = False
 
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
+            schedule.every(SCAN_INTERVAL*2).minutes.do(self.scan_devices_bluetooth)
             self._scheduler = threading.Thread(target=self._run_schedule).start()
             self._sniff = threading.Thread(target=self._run_sniff).start()
             log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
@@ -50,6 +51,18 @@ class Network(object):
         """ Run _scan_network() for given times """
         for _ in range(MAX_PING_TRIES):
             self._scan_network()
+
+    def scan_devices_bluetooth(self):
+        """ Ping all bluetooth devices, even those which are offline """
+        if self._ping_running:
+            return False
+
+        self._ping_running = True
+        for device in DEVICES():
+            address = self._resolve_bt_mac(device)
+            if self._ping_device_bluetooth(address):
+                self._devices_online.add((address))
+        self._ping_running = False
 
     def ping_devices_online(self):
         """
@@ -62,8 +75,12 @@ class Network(object):
 
         self._ping_running = True
         for device in self._devices_online.copy():
-            if self._ping_device(device[0]) or self._ping_device_bluetooth(device[1]):
-                continue
+            if len(device) == 1:  # Device has only bt mac address
+                if self._ping_device_bluetooth(device):
+                    continue
+            else:
+                if self._ping_device(device[0]) or self._ping_device_bluetooth(device[1]):
+                    continue
 
             log.info(f"Lost device {device}")
             self._devices_online.remove(device)
@@ -95,7 +112,7 @@ class Network(object):
             if self._all_devices_online():
                 self._stop_sniff.set()
 
-    def _ping_device_bluetooth(self, device):
+    def _ping_device_bluetooth(self, device, tries=MAX_PING_TRIES):
         """
         Ping Bluetooth device
 
@@ -106,15 +123,16 @@ class Network(object):
         if not bluetooth_mac:
             return False
 
-        p = Popen(["l2ping", "-c", "5", "-t", "2", str(bluetooth_mac)], stdout=PIPE,
-                  stderr=PIPE, close_fds=True)
-        p.communicate()
+        for _ in range(tries):
+            p = Popen(["l2ping", "-c", "5", "-t", "2", str(bluetooth_mac)], stdout=PIPE,
+                      stderr=PIPE, close_fds=True)
+            p.communicate()
 
-        if p.returncode != 0:
-            return False
+            if p.returncode == 0:
+                log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
+                return True
 
-        log.debug(f"Host {bluetooth_mac} is up, responding to bluetooth")
-        return True
+        return False
 
     def _run_sniff(self):
         """ Run scapy network sniff with BPF filter """
