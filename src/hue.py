@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from phue import Bridge
 
 from src.settings import (AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP,
-                          EXCLUDE_LIGHTS, DISABLE_END, DISABLE_START)
+                          DISABLE_END, DISABLE_START, EXCLUDE_LIGHTS)
 from src.sun import Sun
 
 log = logging.getLogger("main")
