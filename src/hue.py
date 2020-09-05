@@ -29,7 +29,6 @@ class Hue(object):
         Set all given lights to full brightness. If sun has set, trigger additional light
         settings.
         """
-        print("lkjvlkfjg", self._is_disabled_time())
         if self._is_disabled_time():
             return
 
@@ -102,12 +101,14 @@ class Hue(object):
         if not DISABLE_START or not DISABLE_END:
             return False
 
+        hours = []
         now = datetime.now()
-        start = now.replace(hour=DISABLE_START, minute=0, second=0, microsecond=0)
-        end = now.replace(hour=DISABLE_END, minute=0, second=0, microsecond=0)
-        if now.hour < DISABLE_START:
-            start -= timedelta(days=1)
-        if now.hour > DISABLE_START:
-            end += timedelta(days=1)
+        start = now.replace(hour=min(DISABLE_START, DISABLE_END),
+                            minute=0, second=0, microsecond=0),
+        end = now.replace(hour=max(DISABLE_START, DISABLE_END),
+                          minute=0, second=0, microsecond=0)
+        while start.hour >= end.hour:
+            hours.append(start.hour)
+            start += timedelta(hours=1)
 
-        return now > start and now < end
+        return now.hour in hours
