@@ -104,8 +104,8 @@ class Network(object):
 
         client_mac = str(packet[Ether].src)
         client_ip = str(packet[IP].src)
-        device = (client_ip, client_mac)
-        if device not in self._devices_online and client_ip != "0.0.0.0":
+        if not self._is_device_online(client_mac) and client_ip != "0.0.0.0":
+            device = (client_ip, client_mac)
             log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
             self.handle_join()
@@ -238,3 +238,7 @@ class Network(object):
     def _all_devices_online(self):
         """ Return True if all residents are currently at home """
         return len(DEVICES()) == len(self._devices_online)
+
+    def _is_device_online(self, mac_address):
+        """ Check is device online based on WiFi mac address """
+        return any(mac == mac_address for ip, mac in self._devices_online)
