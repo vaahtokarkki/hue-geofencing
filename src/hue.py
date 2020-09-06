@@ -104,7 +104,8 @@ class Hue(object):
             return False
 
         hours = []
-        now = timezone("Europe/Helsinki").localize(datetime.now())
+        tz = timezone("Europe/Helsinki")
+        now = datetime.now(tz)
         start = now.replace(hour=min(DISABLE_START, DISABLE_END), minute=0, second=0,
                             microsecond=0)
         end = now.replace(hour=max(DISABLE_START, DISABLE_END), minute=0, second=0,
