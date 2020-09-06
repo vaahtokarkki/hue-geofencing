@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timedelta
 
 from phue import Bridge
+from pytz import timezone
 
 from src.settings import (AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP,
                           DISABLE_END, DISABLE_START, EXCLUDE_LIGHTS)
@@ -30,6 +31,7 @@ class Hue(object):
         settings.
         """
         if self._is_disabled_time():
+            log.info("Home arrive not triggered due disabled time")
             return
 
         for light in ARRIVE_LIGHTS():
@@ -102,11 +104,11 @@ class Hue(object):
             return False
 
         hours = []
-        now = datetime.now()
-        start = now.replace(hour=min(DISABLE_START, DISABLE_END),
-                            minute=0, second=0, microsecond=0),
-        end = now.replace(hour=max(DISABLE_START, DISABLE_END),
-                          minute=0, second=0, microsecond=0)
+        now = timezone("Europe/Helsinki").localize(datetime.now())
+        start = now.replace(hour=min(DISABLE_START, DISABLE_END), minute=0, second=0,
+                            microsecond=0)
+        end = now.replace(hour=max(DISABLE_START, DISABLE_END), minute=0, second=0,
+                          microsecond=0)
         while start.hour >= end.hour:
             hours.append(start.hour)
             start += timedelta(hours=1)
