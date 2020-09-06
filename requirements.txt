@@ -23,6 +23,7 @@ pytest-cov==2.7.1
 pytest-env==0.6.2
 pytest-mock==1.10.4
 python-env==1.0.0
+pytz==2020.1
 requests==2.22.0
 scapy==2.4.3
 schedule==0.6.0
