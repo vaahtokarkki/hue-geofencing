@@ -92,8 +92,6 @@ All network monitoring operations are made with [scapy](https://github.com/secde
 
 Server updates sunset and sunrise times once in a day. Home location is needed for getting correct sunset times. Data if fetched from open [Sunset Sunrise API](https://sunrise-sunset.org/api).
 
-## Continous integartion
-
 ## Built with
 * [scapy](https://github.com/secdev/scapy) - Network monitoring
 * [phue](https://github.com/studioimaginaire/phue) - Hue light controls
