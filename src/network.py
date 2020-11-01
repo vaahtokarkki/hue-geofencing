@@ -167,18 +167,18 @@ class Network(object):
         if not device:
             return False
 
-        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=device), retry=10,
+        ans, unans = srp(Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=device), retry=5,
                          timeout=2, verbose=False)
         if ans:
             log.debug(f"Host {device} is up, responding to ARP")
             return True
 
-        ans = sr1(IP(dst=device)/ICMP(), retry=10, timeout=2, verbose=False)
+        ans = sr1(IP(dst=device)/ICMP(), retry=5, timeout=2, verbose=False)
         if ans:
             log.debug(f"Host {device} is up, responding to ICMP Echo")
             return True
 
-        ans = sr1(IP(dst=device)/TCP(dport=[5353, 62078]), retry=20, timeout=1,
+        ans = sr1(IP(dst=device)/TCP(dport=[5353, 62078]), retry=5, timeout=1,
                   verbose=False)
         if ans:
             log.debug(f"Host {device} is up, responding to ICP port 62078")
@@ -211,7 +211,7 @@ class Network(object):
 
         while True:
             schedule.run_pending()
-            time.sleep(60)
+            time.sleep(5)
 
     def _scan_network(self, ip=NETWORK_MASK):
         """

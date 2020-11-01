@@ -62,7 +62,7 @@ if DISABLE_START:
 DISABLE_END = os.getenv("DISABLE_END")  # Disable end hours
 if DISABLE_END:
     DISABLE_END = int(DISABLE_END)
-NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.11.0/24")
+NETWORK_MASK = os.getenv("NETWORK_MASK", "192.168.1.0/24")
 BRIDGE_IP = os.getenv("BRIDGE_IP")
 DEVICES = _get_devices
 BLUETOOTH_DEVICES = _get_bluetooth_devices

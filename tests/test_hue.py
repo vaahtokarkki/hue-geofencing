@@ -80,7 +80,6 @@ def test_hue_arrive_beofire_sunset(sun, hue):
 
 
 def test_hue_leave(hue):
-    hue.bridge.lights = [Mock(), Mock()]
     hue.set_leave_home()
     for light in hue.bridge.lights:
-        assert not light.on
+        hue.bridge.set_light.assert_any_call(light.light_id, 'on', False)

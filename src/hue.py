@@ -20,10 +20,19 @@ class Hue(object):
     """
     def __init__(self):
         config_path = f"{os.getcwd()}/.phue_config"
-        self.bridge = Bridge(BRIDGE_IP, config_file_path=config_path)
-        self.bridge.connect()
+        try:
+            self.bridge = Bridge(BRIDGE_IP, config_file_path=config_path)
+        except OSError:
+            log.error(f'Failed to connect to Hue bridge using address {BRIDGE_IP}')
+            exit()
+        self.__try_to_run(self.bridge.connect, [])
+        bridge_name = self.__try_to_get(self.bridge.name, sleep=0.1)  # Test connection
+        if not bridge_name:
+            log.error(f'Failed to connect to Hue bridge using address {BRIDGE_IP}')
+            exit()
+
+        log.info(f'Connected to Hue bridge, {bridge_name}!')
         self.sunset = Sun()
-        log.info("Connected to Hue bridge!")
 
     def set_arrive(self):
         """
@@ -35,8 +44,7 @@ class Hue(object):
             return
 
         for light in ARRIVE_LIGHTS():
-            self.bridge.set_light(light, 'on', True)
-            self.bridge.set_light(light, 'bri', 255)
+            self.__try_to_run(self._turn_on_light, [light])
         if self.sunset.is_past_sunset():
             self.set_arrive_after_sunset()
 
@@ -45,26 +53,34 @@ class Hue(object):
 
     def set_leave_home(self):
         """ Turn off all lights """
-        for light in self.bridge.lights:
+        all_lights = self.__try_to_get(self.bridge.lights)
+        if not all_lights:
+            return False
+
+        for light in all_lights:
             if light.name in EXCLUDE_LIGHTS():
                 continue
-            self._turn_off_light(light)
+            self.__try_to_run(self._turn_off_light, [light.light_id])
+        return True
 
     def activate_scene(self, name):
         """ Activate scene by name """
-        scene = self._resolve_scene(name)
-        if not scene or not self._scene_lights_off(scene):
+        scene = self.__try_to_run(self._resolve_scene, [name])
+        if not scene or not self._is_scene_lights_off(scene):
             return
-        self.bridge.activate_scene(scene.group, scene.scene_id)
+        return self.__try_to_run(self.bridge.activate_scene,
+                                 [scene.group, scene.scene_id])
 
-    def _scene_lights_off(self, scene):
+    def _is_scene_lights_off(self, scene):
         """
         Return True if any of lights in given scene is turned on
         """
         if not scene or not scene.lights:
             return False
 
-        scene_lights = self._get_lights(scene.lights)
+        scene_lights = self.__try_to_run(self._get_lights, [scene.lights])
+        if not scene_lights:
+            return False
         return all(light.on is False for light in scene_lights)
 
     def _get_lights(self, lights):
@@ -75,6 +91,9 @@ class Hue(object):
         Resolve scene and group ids from scene name.
         Returns scene or None if scene not found
         """
+        all_scenes = self.__try_to_get(self.bridge.scenes)
+        if not all_scenes:
+            return None
         for scene in self.bridge.scenes:
             if scene.name == name:
                 return scene
@@ -89,15 +108,13 @@ class Hue(object):
 
         Returns True if light is turned off successfully, otherwise False
         """
-        for _ in range(10):
-            try:
-                light.on = False
-                return True
-            except OSError:
-                time.sleep(0.5)
+        self.bridge.set_light(light, 'on', False)
+        return True
 
-        log.debug(f"Failed to turn off light {light}")
-        return False
+    def _turn_on_light(self, light):
+        self.bridge.set_light(light, 'on', True)
+        self.bridge.set_light(light, 'bri', 255)
+        return True
 
     def _is_disabled_time(self):
         if not DISABLE_START or not DISABLE_END:
@@ -112,4 +129,25 @@ class Hue(object):
         if now.hour > DISABLE_START:
             end += timedelta(days=1)
 
-        return now > start and now < end
+        return now >= start and now <= end
+
+    def __try_to_run(self, func, args, exceptions=(OSError,), amount=10, sleep=2):
+        """ Try to run given function and catch given exceptions """
+        for _ in range(amount):
+            try:
+                return func(*args)
+            except exceptions as e:
+                log.debug(f'Try to run failed, sleeping {sleep}s, {e}')
+                time.sleep(sleep)
+        log.info(f'Failed to run {func.__name__} with args {args}')
+        return False
+
+    def __try_to_get(self, property, exceptions=(OSError,), amount=10, sleep=2):
+        for _ in range(amount):
+            try:
+                return property
+            except exceptions as e:
+                log.debug(f'Try to get failed, sleeping {sleep}s, {e}')
+                time.sleep(sleep)
+        log.info('Failed to get property')
+        return False
