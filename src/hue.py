@@ -140,7 +140,7 @@ class Hue(object):
                 log.debug(f'Try to run failed, sleeping {sleep}s, {e}')
                 time.sleep(sleep)
         log.info(f'Failed to run {func.__name__} with args {args}')
-        return False
+        return None
 
     def __try_to_get(self, property, exceptions=(OSError,), amount=10, sleep=2):
         for _ in range(amount):
@@ -150,4 +150,4 @@ class Hue(object):
                 log.debug(f'Try to get failed, sleeping {sleep}s, {e}')
                 time.sleep(sleep)
         log.info('Failed to get property')
-        return False
+        return None

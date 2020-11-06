@@ -208,10 +208,13 @@ class Network(object):
         """
         Start loop for scheduler. This should be run at own thread to prevent blocking
         """
-
         while True:
-            schedule.run_pending()
-            time.sleep(5)
+            try:
+                while True:
+                    schedule.run_pending()
+                    time.sleep(5)
+            except OSError as e:
+                log.error(f"Scheduler failed: {e}")
 
     def _scan_network(self, ip=NETWORK_MASK):
         """
