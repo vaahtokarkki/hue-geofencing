@@ -58,7 +58,7 @@ class Hue(object):
             return False
 
         for light in all_lights:
-            if light.name in EXCLUDE_LIGHTS():
+            if self.__try_to_get(light.name) in EXCLUDE_LIGHTS():
                 continue
             self.__try_to_run(self._turn_off_light, [light.light_id])
         return True
