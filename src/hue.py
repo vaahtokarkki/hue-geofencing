@@ -3,7 +3,7 @@ import os
 import time
 from datetime import datetime, timedelta
 
-from phue import Bridge
+from phue import Bridge, PhueException
 from pytz import timezone
 
 from src.settings import (AFTER_SUNSET_SCENE, ARRIVE_LIGHTS, BRIDGE_IP,
@@ -131,7 +131,8 @@ class Hue(object):
 
         return now >= start and now <= end
 
-    def __try_to_run(self, func, args, exceptions=(OSError,), amount=10, sleep=2):
+    def __try_to_run(self, func, args, exceptions=(OSError, PhueException), amount=10,
+                     sleep=2):
         """ Try to run given function and catch given exceptions """
         for _ in range(amount):
             try:
@@ -142,7 +143,8 @@ class Hue(object):
         log.info(f'Failed to run {func.__name__} with args {args}')
         return None
 
-    def __try_to_get(self, property, exceptions=(OSError,), amount=10, sleep=2):
+    def __try_to_get(self, property, exceptions=(OSError, PhueException), amount=10,
+                     sleep=2):
         for _ in range(amount):
             try:
                 return property

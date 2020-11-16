@@ -213,7 +213,7 @@ class Network(object):
                 while True:
                     schedule.run_pending()
                     time.sleep(5)
-            except OSError as e:
+            except Exception as e:
                 log.error(f"Scheduler failed: {e}")
 
     def _scan_network(self, ip=NETWORK_MASK):
