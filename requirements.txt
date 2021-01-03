@@ -7,13 +7,13 @@ coverage==4.5.4
 entrypoints==0.3
 flake8==3.7.8
 idna==2.8
-importlib-metadata==0.19
+importlib-metadata==3.3.0
 isort==4.3.21
 mccabe==0.6.1
 more-itertools==7.2.0
 packaging==19.1
 phue==1.1
-pluggy==0.12.0
+pluggy==0.13.1
 py==1.8.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
