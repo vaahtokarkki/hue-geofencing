@@ -34,15 +34,13 @@ Additional configuration:
 * `SCAN_INTERVAL`, how often to ping devices currently at home
 * `DISABLE_START` and `DISABLE_END`, range in hours when home arrive action should be disabled
 
-### Run with Docker Compose
+### Run with Docker
 
 ```
-$ git clone https://github.com/vaahtokarkki/hue-geofencing
-$ cd hue-geofencing
-$ docker-compose run armv6
+docker run --env-file ".env" -d --name "hue-geofencing" --restart "unless-stopped" --net=host vaahtokarkki/hue-geofencing
 ```
 
-Available environments on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
+Available tags on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
 
 Docker images can be found on [Docker Hub](https://hub.docker.com/repository/docker/vaahtokarkki/hue-geofencing)
 
