@@ -37,7 +37,15 @@ Additional configuration:
 ### Run with Docker
 
 ```
-docker run --env-file ".env" -d --name "hue-geofencing" --restart "unless-stopped" --net=host vaahtokarkki/hue-geofencing
+mkdir hue-geofencing
+touch .env
+docker run -d \
+  --env-file ".env"  \
+  --name "hue-geofencing" \
+  --restart "unless-stopped" \
+  --net=host \
+  --mount "type=bind,source=/home/pi/hue-geofencing/.phue_config,target=/usr/src/app/.phue_config" \
+  vaahtokarkki/hue-geofencing
 ```
 
 Available tags on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
