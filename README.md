@@ -38,7 +38,7 @@ Additional configuration:
 
 ```
 mkdir hue-geofencing
-touch .env
+touch .phue_config
 docker run -d \
   --env-file ".env"  \
   --name "hue-geofencing" \
@@ -48,7 +48,7 @@ docker run -d \
   vaahtokarkki/hue-geofencing
 ```
 
-Available tags on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
+Available tags on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`. Adjust mount source argument to match your working directory.
 
 Docker images can be found on [Docker Hub](https://hub.docker.com/repository/docker/vaahtokarkki/hue-geofencing)
 
