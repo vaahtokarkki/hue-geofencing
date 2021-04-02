@@ -1,4 +1,6 @@
+import ipaddress
 import logging
+import subprocess
 import threading
 import time
 from subprocess import PIPE, Popen
@@ -7,7 +9,7 @@ import schedule
 from scapy.all import ARP, ICMP, IP, TCP, Ether, sniff, sr1, srp
 
 from src.settings import (BLUETOOTH_DEVICES, DEVICES, NETWORK_MASK,
-                          SCAN_INTERVAL)
+                          PING_SCHEDULE, SCAN_INTERVAL)
 
 MAX_PING_TRIES = 5  # How many times a device is pinged
 log = logging.getLogger("main")
@@ -33,8 +35,8 @@ class Network(object):
         self.handle_leave = callback_leave
         self.handle_join = callback_join
         self._devices_online = set()
+        self._discovered_hosts = set()
         self._stop_sniff = threading.Event()
-        self.scan_devices()
         if track:
             log.info("Tracking active")
 
@@ -43,14 +45,33 @@ class Network(object):
 
             schedule.every(SCAN_INTERVAL).minutes.do(self.ping_devices_online)
             schedule.every(SCAN_INTERVAL*2).minutes.do(self.scan_devices_bluetooth)
+            if PING_SCHEDULE:
+                schedule.every(1).hours.do(self.scan_devices)
+
             self._scheduler = threading.Thread(target=self._run_schedule).start()
             self._sniff = threading.Thread(target=self._run_sniff).start()
-            log.info(f"Scanning interval set up with {SCAN_INTERVAL} min")
+            self.scan_devices()
 
-    def scan_devices(self):
-        """ Run _scan_network() for given times """
-        for _ in range(MAX_PING_TRIES):
-            self._scan_network()
+    def scan_devices(self, ip=NETWORK_MASK):
+        """
+        Scan all devices in network. By default network mask from settings is used, but
+        can be overridden from arguments. Found devices are handled as normal packets in
+        handle packet method.
+        """
+        def ping(host):
+            log.debug(f"Ping host {host}")
+            subprocess.call(["ping", "-c", "1", str(host)], shell=False, stdout=subprocess.DEVNULL)
+
+        log.debug("Staring ping")
+        for host in self._discovered_hosts:
+            ping(host)
+
+        if self._all_devices_online():
+            return
+
+        subnetmask_hosts = [host for host in ipaddress.ip_network(ip).hosts()]
+        for host in subnetmask_hosts:
+            ping(host)
 
     def scan_devices_bluetooth(self):
         """ Ping all bluetooth devices, even those which are offline """
@@ -104,10 +125,12 @@ class Network(object):
 
         client_mac = str(packet[Ether].src)
         client_ip = str(packet[IP].src)
+        log.debug(f'Packet: {client_ip}, {client_mac}')
         if not self._is_device_online(client_mac) and client_ip != "0.0.0.0":
             device = (client_ip, client_mac)
             log.info(f"new tracked device joined {device}")
             self._devices_online.add(device)
+            self._discovered_hosts.add(client_ip)
             self.handle_join()
             if self._all_devices_online():
                 self._stop_sniff.set()
@@ -215,28 +238,6 @@ class Network(object):
                     time.sleep(5)
             except Exception as e:
                 log.error(f"Scheduler failed: {e}")
-
-    def _scan_network(self, ip=NETWORK_MASK):
-        """
-        Scan all devices in network. By default network mask from settings is used, but
-        can be overridden from arguments. Found devices are added to devices_online class
-        variable.
-        """
-
-        arp_request = ARP(pdst=ip)
-        broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
-        arp_request_broadcast = broadcast/arp_request
-        answered_list = srp(arp_request_broadcast, timeout=2, verbose=False)[0]
-        for client in answered_list:
-            client_mac = str(client[1].hwsrc)
-            client_ip = str(client[1].psrc)
-            if client_mac in DEVICES():
-                log.debug(f"found device {client_ip} {client_mac}")
-                self._devices_online.add((client_ip, client_mac))
-
-        log.debug(f"tracked devices online {self._devices_online}")
-        if self._all_devices_online():
-            self._stop_sniff.set()
 
     def _all_devices_online(self):
         """ Return True if all residents are currently at home """

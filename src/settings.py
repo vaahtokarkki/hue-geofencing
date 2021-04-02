@@ -70,3 +70,4 @@ ARRIVE_LIGHTS = _get_arrive_lights
 EXCLUDE_LIGHTS = _get_excluded_lights
 AFTER_SUNSET_SCENE = os.getenv("AFTER_SUNSET", None)
 LOCATION = _get_location
+PING_SCHEDULE = os.getenv('PING_SCHEDULE', False)

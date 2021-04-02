@@ -33,6 +33,7 @@ Additional configuration:
 * `NETWORK_MASK`, network mask to scan initially when starting server
 * `SCAN_INTERVAL`, how often to ping devices currently at home
 * `DISABLE_START` and `DISABLE_END`, range in hours when home arrive action should be disabled
+* `PING_SCHEDULE` when True, will ping every hour all devices in subnet to generate traffic. May be useful if there is troubles to detect packages in network.
 
 ### Run with Docker Compose
 

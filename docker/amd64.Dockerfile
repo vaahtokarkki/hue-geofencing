@@ -3,7 +3,7 @@ FROM python:3.7-slim-buster
 WORKDIR /usr/src/app
 
 RUN apt-get update && \
-    apt-get -y install tcpdump bluez
+    apt-get -y install tcpdump bluez iputils-ping
 
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
