@@ -35,15 +35,21 @@ Additional configuration:
 * `DISABLE_START` and `DISABLE_END`, range in hours when home arrive action should be disabled
 * `PING_SCHEDULE` when True, will ping every hour all devices in subnet to generate traffic. May be useful if there is troubles to detect packages in network.
 
-### Run with Docker Compose
+### Run with Docker
 
 ```
-$ git clone https://github.com/vaahtokarkki/hue-geofencing
-$ cd hue-geofencing
-$ docker-compose run armv6
+mkdir hue-geofencing
+touch .phue_config
+docker run -d \
+  --env-file ".env"  \
+  --name "hue-geofencing" \
+  --restart "unless-stopped" \
+  --net=host \
+  --mount "type=bind,source=/home/pi/hue-geofencing/.phue_config,target=/usr/src/app/.phue_config" \
+  vaahtokarkki/hue-geofencing
 ```
 
-Available environments on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`.
+Available tags on Docker are: `amd64`, `armv6` (for RPi Zero and RPi 1), `armv7`. Adjust mount source argument to match your working directory.
 
 Docker images can be found on [Docker Hub](https://hub.docker.com/repository/docker/vaahtokarkki/hue-geofencing)
 
