@@ -2,7 +2,7 @@ version: '3'
 
 services:
   amd64:
-    #image: vaahtokarkki/hue-geofencing:amd64
+    image: vaahtokarkki/hue-geofencing:amd64
     build:
       context: .
       dockerfile: ./docker/amd64.Dockerfile
