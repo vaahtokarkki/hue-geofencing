@@ -60,7 +60,8 @@ class Network(object):
         """
         def ping(host):
             log.debug(f"Ping host {host}")
-            subprocess.call(["ping", "-c", "1", str(host)], shell=False, stdout=subprocess.DEVNULL)
+            subprocess.call(["ping", "-c", "1", str(host)], shell=False,
+                            stdout=subprocess.DEVNULL)
 
         log.debug("Staring ping")
         for host in self._discovered_hosts:
