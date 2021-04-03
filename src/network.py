@@ -63,12 +63,12 @@ class Network(object):
             subprocess.call(["ping", "-c", "1", str(host)], shell=False,
                             stdout=subprocess.DEVNULL)
 
+        if self._all_devices_online():
+            return
+
         log.debug("Staring ping")
         for host in self._discovered_hosts:
             ping(host)
-
-        if self._all_devices_online():
-            return
 
         subnetmask_hosts = [host for host in ipaddress.ip_network(ip).hosts()]
         for host in subnetmask_hosts:
