@@ -14,7 +14,7 @@ more-itertools==7.2.0
 packaging==19.1
 phue==1.1
 pluggy==0.13.1
-py==1.8.0
+py==1.10.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
 pyparsing==2.4.2
