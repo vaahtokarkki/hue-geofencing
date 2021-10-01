@@ -28,6 +28,6 @@ requests==2.22.0
 scapy==2.4.3
 schedule==0.6.0
 six==1.12.0
-urllib3==1.25.3
+urllib3==1.26.5
 wcwidth==0.1.7
 zipp==0.6.0
